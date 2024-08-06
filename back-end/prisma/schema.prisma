@@ -7,10 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model avaliacoes {
   id         Int       @id @default(autoincrement())
-  usuario_id Int?
-  nota       Int?
+  usuario_id Int
+  nota       Int
   comentario String?
   usuarios   usuarios? @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -21,8 +22,8 @@ model historicotransacoes {
   id         Int       @id @default(autoincrement())
   usuario_id Int
   troca_id   Int
-  trocas     trocas   @relation(fields: [troca_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  trocas     trocas    @relation(fields: [troca_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios   usuarios  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model livros {
@@ -30,9 +31,9 @@ model livros {
   usuario_id     Int
   titulo         String    @db.VarChar(255)
   autor          String    @db.VarChar(255)
-  genero         String   @db.VarChar(255)
+  genero         String    @db.VarChar(255)
   ano_publicacao Int
-  usuarios       usuarios @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios       usuarios? @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   trocas         trocas[]
 
   @@index([usuario_id], map: "idx_livros_usuario_id")
@@ -42,7 +43,7 @@ model mensagenschat {
   id         Int       @id @default(autoincrement())
   usuario_id Int
   mensagem   String
-  usuarios   usuarios @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios   usuarios  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([usuario_id], map: "idx_mensagenschat_usuario_id")
 }
@@ -51,10 +52,10 @@ model trocas {
   id                  Int                   @id @default(autoincrement())
   livro_id            Int
   usuario_id          Int
-  status              status_enum          @default(pendente)
+  status              status_enum           @default(pendente)
   historicotransacoes historicotransacoes[]
-  livros              livros               @relation(fields: [livro_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  usuarios            usuarios             @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  livros              livros                @relation(fields: [livro_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios            usuarios              @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([livro_id], map: "idx_trocas_livro_id")
   @@index([usuario_id], map: "idx_trocas_usuario_id")
@@ -65,7 +66,7 @@ model usuarios {
   nome                String                @db.VarChar(255)
   email               String                @unique @db.VarChar(255)
   senha               String                @db.VarChar(255)
-  reputacao           Float                @default(0.0)
+  reputacao           Float                 @default(0.0)
   avaliacoes          avaliacoes[]
   historicotransacoes historicotransacoes[]
   livros              livros[]

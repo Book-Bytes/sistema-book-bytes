@@ -1,45 +1,56 @@
-const Router = require('express')
-const userController = require('../controller/userController')
-const bookController = require('../controller/bookController')
-const tradeController = require('../controller/tradeController')
-const transactionHistoryController = require('../controller/transactionHistoryController')
-const reviewController = require('../controller/reviewController')
-const chatController = require('../controller/chatController')
+const Router = require('express');
+const authController = require('../controllers/authController');
+const userController = require('../controllers/userController');
+const bookController = require('../controllers/bookController');
+const exchangesController = require('../controllers/exchangesController');
+const transactionHistoryController = require('../controllers/transactionHistoryController');
+const reviewController = require('../controllers/reviewController');
+const chatController = require('../controllers/chatController');
 
-const router = Router()
+const authenticate = require('../middlewares/authenticate');
+const { authorization } = require('../middlewares/authorization');
+const { authorizationBook } = require('../middlewares/authorization');
 
-// Para operações relacionadas ao usuário
-router.get(("/usuarios"), userController.getAllUsers) 
-router.post(("/usuarios"), userController.createUser)
-router.put(("/usuarios/:id"), userController.updateUser)
-router.delete(("/usuarios/:id"), userController.deleteUser)
+const router = Router();
 
-// Para operações relacionadas a livros
-router.get(("/livros"), bookController.getAllBooks) 
-router.post(("/livros"), bookController.createBook)
-router.put(("/livros/:id"), bookController.updateBook)
-router.delete(("/livros/:id"), bookController.deleteBook)
+// Rotas para operações de autenticação
+router.post(("/login"), authController.login);
 
-// Para operações relacionadas a trocas
-router.get(("/trocas"), tradeController.getAllTrades)
-router.post(("/trocas"), tradeController.createTrade)
-router.put(("/trocas/:id"), tradeController.updateTrade)
-router.delete(("/trocas/:id"), tradeController.deleteTrade)
+// Rotas para operações relacionadas ao usuário
+router.get(("/usuarios"), userController.getAllUsers);
+router.post(("/usuarios/cadastrar"), userController.createUser);
+router.put(("/usuarios/:id"), authenticate, authorization, userController.updateUser);
+router.delete(("/usuarios/:id"), authenticate, authorization, userController.deleteUser);
+router.put(("/usuarios/:id/senha"), authenticate, authorization, userController.updatePassword);
+router.get("/usuarios/:id/reputacao", userController.getUserReputation);
+router.get(("/usuarios/:id"), userController.getUser);
 
-// Para operações relacionadas ao histórico de transações
-router.get(("/historicoTransacoes"), transactionHistoryController.getAllTransactions)
-router.post(("/historicoTransacoes"), transactionHistoryController.createTransaction)
-router.put(("/historicoTransacoes/:id"), transactionHistoryController.updateTransaction)
-router.delete(("/historicoTransacoes/:id"), transactionHistoryController.deleteTransaction)
+// Rotas para operações relacionadas a livros
+router.get(("/livros"), bookController.getAllBooks);
+router.post(("/livros/cadastrar"), authenticate, bookController.createBook);
+router.put(("/livros/:id"), authenticate, authorizationBook, bookController.updateBook);
+router.delete(("/livros/:id"), authenticate, authorizationBook, bookController.deleteBook);
+router.get(("/livros/:id"), bookController.getBook);
+router.get(("/usuarios/:id/livros"), bookController.getUserBooks);
 
-// Para operações relacionadas a avaliações
-router.get(("/avaliacoes"), reviewController.getAllReviews)
-router.post(("/avaliacoes"), reviewController.createReview)
-router.put(("/avaliacoes/:id"), reviewController.updateReview)
-router.delete(("/avaliacoes/:id"), reviewController.deleteReview)
+// Rotas para operações relacionadas a trocas
+router.get(("/trocas"), exchangesController.getAllExchanges);
+router.post(("/trocas"), authenticate, exchangesController.createExchange);
+router.delete("/trocas/:id", authenticate, exchangesController.cancelExchange);
+router.get(("/usuarios/trocas/:id"), authenticate, exchangesController.getUserExchanges);
+router.put(("/trocas/:id/status"), authenticate, exchangesController.updateExchange);
 
-// Para operações relacionadas a mensagens de chat
-router.get(("/mensagenschat"), chatController.getAllMessages)
-router.post(("/mensagenschat"), chatController.createMessage)
+// Rotas para operações relacionadas ao histórico de transações
+router.get(("/usuarios/:id/historico"), transactionHistoryController.getUserHistory);
+router.post(("/historico/add"), transactionHistoryController.addToHistory);
 
-module.exports = router
+// Rotas para operações relacionadas a avaliações
+router.get(("/trocas/:troca_id/avaliacoes"), reviewController.getReviewsExchange);
+router.post(("/avaliacoes/:troca_id"), authenticate, reviewController.createReview);
+
+
+// Rotas para operações relacionadas a mensagens de chat
+router.get(("/trocas/:troca_id/mensagens"), authenticate, chatController.listMessages);
+router.post(("/trocas/:troca_id/mensagens"), authenticate, chatController.sendMenssage);
+
+module.exports = router;
